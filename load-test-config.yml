@@ -1,0 +1,28 @@
+config:
+  target: "http://192.168.68.67:5000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      name: "Warm up"
+    - duration: 120
+      arrivalRate: 10
+      rampTo: 50
+      name: "Ramp up load"
+    - duration: 600
+      arrivalRate: 50
+      name: "Sustained load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Test API endpoints"
+    flow:
+      - get:
+          url: "/get-unread-messages?uid={{ $randomString() }}"
+      - think: 2
+      - post:
+          url: "/api/messages/mark-as-read"
+          json:
+            userId: "{{ $randomString() }}"
+            chatPartnerId: "{{ $randomString() }}" 

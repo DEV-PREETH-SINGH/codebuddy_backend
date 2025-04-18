@@ -62,44 +62,47 @@ const striverDSAProblems = [
     { id: 50, title: 'Kth Smallest Element in a BST', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/kth-smallest-element-in-a-bst/', titleSlug: 'kth-smallest-element-in-a-bst' },
     { id: 51, title: 'Serialize and Deserialize Binary Tree', solved: false, difficulty: 'Hard', url: 'https://leetcode.com/problems/serialize-and-deserialize-binary-tree/', titleSlug: 'serialize-and-deserialize-binary-tree' },
     { id: 52, title: 'Count Complete Tree Nodes', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/count-complete-tree-nodes/', titleSlug: 'count-complete-tree-nodes' },
-    { id: 53, title: 'Diameter of Binary Tree', solved: false, difficulty: 'Easy', url: 'https://leetcode.com/problems/diameter-of-binary-tree/', titleSlug: 'diameter-of-binary-tree' },
-    { id: 54, title: 'Merge Intervals', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/merge-intervals/', titleSlug: 'merge-intervals' },
-    { id: 55, title: 'Insert Interval', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/insert-interval/', titleSlug: 'insert-interval' },
-    { id: 56, title: 'Insert Delete GetRandom O(1)', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/insert-delete-getrandom-o1/', titleSlug: 'insert-delete-getrandom-o1' },
-    { id: 57, title: 'Implement Trie (Prefix Tree)', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/implement-trie-prefix-tree/', titleSlug: 'implement-trie-prefix-tree' },
-    { id: 58, title: 'Find Peak Element', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/find-peak-element/', titleSlug: 'find-peak-element' },
-    { id: 59, title: 'Palindrome Linked List', solved: false, difficulty: 'Easy', url: 'https://leetcode.com/problems/palindrome-linked-list/', titleSlug: 'palindrome-linked-list' },
-    { id: 60, title: 'Subarray Sum Equals K', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/subarray-sum-equals-k/', titleSlug: 'subarray-sum-equals-k' },
-    { id: 61, title: 'Find All Anagrams in a String', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/find-all-anagrams-in-a-string/', titleSlug: 'find-all-anagrams-in-a-string' },
-    { id: 62, title: 'Maximum Subarray', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/maximum-subarray/', titleSlug: 'maximum-subarray' },
-    { id: 63, title: 'Maximum Product Subarray', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/maximum-product-subarray/', titleSlug: 'maximum-product-subarray' },
-    { id: 64, title: 'Find the Duplicate Number', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/find-the-duplicate-number/', titleSlug: 'find-the-duplicate-number' },
-    { id: 65, title: 'Word Search II', solved: false, difficulty: 'Hard', url: 'https://leetcode.com/problems/word-search-ii/', titleSlug: 'word-search-ii' },
-    { id: 66, title: 'Maximal Rectangle', solved: false, difficulty: 'Hard', url: 'https://leetcode.com/problems/maximal-rectangle/', titleSlug: 'maximal-rectangle' },
-    { id: 67, title: 'Binary Tree Level Order Traversal II', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/binary-tree-level-order-traversal-ii/', titleSlug: 'binary-tree-level-order-traversal-ii' },
-    { id: 68, title: 'Product of Array Except Self', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/product-of-array-except-self/', titleSlug: 'product-of-array-except-self' },
-    { id: 69, title: 'Valid Sudoku', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/valid-sudoku/', titleSlug: 'valid-sudoku' },
-    { id: 70, title: 'Maximum Sum of Two Non-Overlapping Subarrays', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/maximum-sum-of-two-non-overlapping-subarrays/', titleSlug: 'maximum-sum-of-two-non-overlapping-subarrays' },
-    { id: 71, title: 'Longest Consecutive Sequence', solved: false, difficulty: 'Hard', url: 'https://leetcode.com/problems/longest-consecutive-sequence/', titleSlug: 'longest-consecutive-sequence' },
-    { id: 72, title: 'Maximal Square', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/maximal-square/', titleSlug: 'maximal-square' },
-    { id: 73, title: 'Word Search', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/word-search/', titleSlug: 'word-search' },
-    { id: 74, title: 'Longest Substring Without Repeating Characters', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/longest-substring-without-repeating-characters/', titleSlug: 'longest-substring-without-repeating-characters' },
-    { id: 75, title: 'Maximal Rectangle', solved: false, difficulty: 'Hard', url: 'https://leetcode.com/problems/maximal-rectangle/', titleSlug: 'maximal-rectangle' },
-    { id: 76, title: 'Reorder List', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/reorder-list/', titleSlug: 'reorder-list' },
-    { id: 77, title: 'Find All Numbers Disappeared in an Array', solved: false, difficulty: 'Easy', url: 'https://leetcode.com/problems/find-all-numbers-disappeared-in-an-array/', titleSlug: 'find-all-numbers-disappeared-in-an-array' },
-    { id: 78, title: 'Set Matrix Zeroes', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/set-matrix-zeroes/', titleSlug: 'set-matrix-zeroes' },
-    { id: 79, title: 'Divide and Conquer', solved: false, difficulty: 'Not Available on LeetCode', url: '', titleSlug: '' },
-    { id: 80, title: 'Find Missing Number', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/find-missing-number/', titleSlug: 'find-missing-number' }
-  ];
-  
+    { id: 53, title: 'Merge Intervals', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/merge-intervals/', titleSlug: 'merge-intervals' },
+    { id: 54, title: 'Insert Interval', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/insert-interval/', titleSlug: 'insert-interval' },
+    { id: 55, title: 'Insert Delete GetRandom O(1)', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/insert-delete-getrandom-o1/', titleSlug: 'insert-delete-getrandom-o1' },
+    { id: 56, title: 'Implement Trie (Prefix Tree)', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/implement-trie-prefix-tree/', titleSlug: 'implement-trie-prefix-tree' },
+    { id: 57, title: 'Palindrome Linked List', solved: false, difficulty: 'Easy', url: 'https://leetcode.com/problems/palindrome-linked-list/', titleSlug: 'palindrome-linked-list' },
+    { id: 58, title: 'Subarray Sum Equals K', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/subarray-sum-equals-k/', titleSlug: 'subarray-sum-equals-k' },
+    { id: 59, title: 'Find All Anagrams in a String', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/find-all-anagrams-in-a-string/', titleSlug: 'find-all-anagrams-in-a-string' },
+    { id: 60, title: 'Word Search II', solved: false, difficulty: 'Hard', url: 'https://leetcode.com/problems/word-search-ii/', titleSlug: 'word-search-ii' },
+    { id: 61, title: 'Maximal Rectangle', solved: false, difficulty: 'Hard', url: 'https://leetcode.com/problems/maximal-rectangle/', titleSlug: 'maximal-rectangle' },
+    { id: 62, title: 'Binary Tree Level Order Traversal II', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/binary-tree-level-order-traversal-ii/', titleSlug: 'binary-tree-level-order-traversal-ii' },
+    { id: 63, title: 'Product of Array Except Self', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/product-of-array-except-self/', titleSlug: 'product-of-array-except-self' },
+    { id: 64, title: 'Valid Sudoku', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/valid-sudoku/', titleSlug: 'valid-sudoku' },
+    { id: 65, title: 'Maximum Sum of Two Non-Overlapping Subarrays', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/maximum-sum-of-two-non-overlapping-subarrays/', titleSlug: 'maximum-sum-of-two-non-overlapping-subarrays' },
+    { id: 66, title: 'Longest Consecutive Sequence', solved: false, difficulty: 'Hard', url: 'https://leetcode.com/problems/longest-consecutive-sequence/', titleSlug: 'longest-consecutive-sequence' },
+    { id: 67, title: 'Maximal Square', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/maximal-square/', titleSlug: 'maximal-square' },
+    { id: 68, title: 'Longest Substring Without Repeating Characters', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/longest-substring-without-repeating-characters/', titleSlug: 'longest-substring-without-repeating-characters' },
+    { id: 69, title: 'Reorder List', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/reorder-list/', titleSlug: 'reorder-list' },
+    { id: 70, title: 'Find All Numbers Disappeared in an Array', solved: false, difficulty: 'Easy', url: 'https://leetcode.com/problems/find-all-numbers-disappeared-in-an-array/', titleSlug: 'find-all-numbers-disappeared-in-an-array' },
+    { id: 71, title: 'Set Matrix Zeroes', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/set-matrix-zeroes/', titleSlug: 'set-matrix-zeroes' },
+    { id: 72, title: 'Divide and Conquer', solved: false, difficulty: 'Not Available on LeetCode', url: '', titleSlug: '' },
+    { id: 73, title: 'Find Missing Number', solved: false, difficulty: 'Medium', url: 'https://leetcode.com/problems/find-missing-number/', titleSlug: 'find-missing-number' }
+];
 
 const insertProblems = async () => {
   try {
+    // First, clear all existing problems
+    console.log("Clearing existing problems...");
+    await Problem.deleteMany({});
+    console.log("Existing problems cleared.");
+
+    // Insert new problems
+    console.log("Inserting new problems...");
     await Problem.insertMany(striverDSAProblems);
     console.log("Striver DSA problems inserted successfully!");
-    mongoose.connection.close();
+    
+    // Close the connection
+    await mongoose.connection.close();
+    console.log("MongoDB connection closed.");
   } catch (error) {
-    console.error("Error inserting problems:", error);
+    console.error("Error:", error);
+    await mongoose.connection.close();
   }
 };
 

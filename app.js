@@ -4,6 +4,8 @@ const cors = require('cors');
 const multer = require('multer');
 const axios = require('axios');
 const bodyParser = require('body-parser');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 require('dotenv').config();
 const router = express.Router();
 const moment = require('moment');
@@ -11,10 +13,31 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000 // limit each IP to 100 requests per windowMs
+});
+
+// Apply rate limiting to all routes
+app.use(limiter);
+
+// Use compression
+app.use(compression());
+
 // Middleware
 app.use(bodyParser.json());
 app.use('/uploads', express.static('uploads')); // Serve images from 'uploads' folder
 app.use(cors());
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: 'Something went wrong!',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  });
+});
 
 // Import models
 const User = require('./models/User');
@@ -216,9 +239,9 @@ app.get('/health', (req, res) => {
 
 // Signup Endpoint: Save user info to MongoDB after Firebase Authentication
 app.post('/signup', async (req, res) => {
-  const { username, email, uid } = req.body;
+  const { email, uid } = req.body;
 
-  if (!username || !email || !uid) {
+  if (!email || !uid) {
     return res.status(400).send({ message: 'Missing required fields' });
   }
 
@@ -230,7 +253,7 @@ app.post('/signup', async (req, res) => {
     }
 
     const newUser = new User({
-      username,
+      username:"",
       email,
       uid,
       clickedStartToday: false, // Initialize as false
@@ -354,7 +377,7 @@ app.get('/get-users', async (req, res) => {
         dailyProblems: currentUser.dailyProblems, // Added dailyProblems matching
         uid: { $ne: uid }, // Exclude current user's UID
       },
-      'uid username profilePic' // Include profilePic in response
+      'uid username profilePic preferredLanguage preferredSolvingTime dsaSheet dailyProblems codingGoal codingLevel codingSpeed solvePreference partnerPreference bio' // Include all metadata fields
     );
         
     res.status(200).send({ message: 'Users fetched successfully', users });
@@ -514,6 +537,72 @@ app.post('/api/messages/send-special', async (req, res) => {
   }
 });
 
+// Endpoint to set a new partner and clear old partner relationship
+app.post('/api/set-partner', async (req, res) => {
+  const { userId, newPartnerId } = req.body;
+  
+  if (!userId || !newPartnerId) {
+    return res.status(400).json({ error: 'Both user ID and new partner ID are required' });
+  }
+  
+  try {
+    // Find the current user and the new partner
+    const currentUser = await User.findOne({ uid: userId });
+    const newPartner = await User.findOne({ uid: newPartnerId });
+    
+    if (!currentUser || !newPartner) {
+      return res.status(404).json({ error: 'One or both users not found' });
+    }
+    
+    // Check if the current user already has a partner
+    if (currentUser.partner) {
+      const oldPartner = await User.findOne({ uid: currentUser.partner });
+      
+      // If old partner exists and has the current user as their partner, clear it
+      if (oldPartner && oldPartner.partner === userId) {
+        oldPartner.partner = null;
+        await oldPartner.save();
+      }
+    }
+    
+    // Check if the new partner already has a partner
+    if (newPartner.partner) {
+      const newPartnerOldPartner = await User.findOne({ uid: newPartner.partner });
+      
+      // If new partner's old partner exists and has the new partner as their partner, clear it
+      if (newPartnerOldPartner && newPartnerOldPartner.partner === newPartnerId) {
+        newPartnerOldPartner.partner = null;
+        await newPartnerOldPartner.save();
+      }
+    }
+    
+    // Update the partnership for both users
+    currentUser.partner = newPartnerId;
+    newPartner.partner = userId;
+    
+    // Save both users
+    await currentUser.save();
+    await newPartner.save();
+    
+    res.status(200).json({
+      message: 'Partner relationship updated successfully',
+      currentUser: {
+        uid: currentUser.uid,
+        partner: currentUser.partner
+      },
+      newPartner: {
+        uid: newPartner.uid,
+        partner: newPartner.partner
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error updating partner relationship:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update the existing partner acceptance endpoint to use the new functionality
 app.post('/api/messages/accepted', async (req, res) => {
   const { senderUID, receiverUID, message } = req.body;
   
@@ -529,6 +618,30 @@ app.post('/api/messages/accepted', async (req, res) => {
     // Check if the receiver's UID is in the sender's pendingRequest
     if (!sender.pendingRequest.includes(receiverUID)) {
       return res.status(400).json({ error: 'No pending request from the receiver' });
+    }
+    
+    // Handle old partnerships before creating new ones
+    
+    // Check if the sender already has a partner
+    if (sender.partner) {
+      const oldPartner = await User.findOne({ uid: sender.partner });
+      
+      // If old partner exists and has the sender as their partner, clear it
+      if (oldPartner && oldPartner.partner === senderUID) {
+        oldPartner.partner = null;
+        await oldPartner.save();
+      }
+    }
+    
+    // Check if the receiver already has a partner
+    if (receiver.partner) {
+      const oldPartner = await User.findOne({ uid: receiver.partner });
+      
+      // If old partner exists and has the receiver as their partner, clear it
+      if (oldPartner && oldPartner.partner === receiverUID) {
+        oldPartner.partner = null;
+        await oldPartner.save();
+      }
     }
     
     // Update the partner field for both users
@@ -697,7 +810,7 @@ app.post('/api/messages/check-streak', async (req, res) => {
     // Step 3: Fetch LeetCode submissions
     const fetchSubmissions = async (leetcodeProfileId) => {
       try {
-        const response = await axios.get(`https://leetcode-api-faisalshohag.vercel.app/${leetcodeProfileId}`);
+        const response = await axios.get(`https://leetcode-api-faisalshohag.vercel.app/${leetcodeProfileId}?timestamp=${Date.now()}`);
         return response.data.recentSubmissions || [];
       } catch (err) {
         console.error('Error fetching submissions:', err);
@@ -1003,7 +1116,7 @@ app.post('/api/messages/check-streak', async (req, res) => {
 //   const userId = req.params.userId;
 
 //   try {
-//     // Find the user by their userId
+//     // 1️⃣ Find the user in MongoDB
 //     const user = await User.findOne({ uid: userId });
 
 //     if (!user) {
@@ -1014,10 +1127,8 @@ app.post('/api/messages/check-streak', async (req, res) => {
 //       return res.status(400).json({ message: "LeetCode username not linked" });
 //     }
 
-//     // Fetch user stats from the LeetCode API
-//     const response = await axios.get(
-//       `https://leetcode-api-faisalshohag.vercel.app/${user.leetcodeProfileId}`
-//     );
+//     // 2️⃣ Fetch user submissions from LeetCode API
+//     const response = await axios.get(`https://leetcode-api-faisalshohag.vercel.app/${user.leetcodeProfileId}`);
 
 //     if (!response.data || !response.data.recentSubmissions || !response.data.submissionCalendar) {
 //       return res.status(500).json({ message: "Failed to fetch LeetCode stats" });
@@ -1098,7 +1209,7 @@ app.get("/get-progress/:userId", async (req, res) => {
 
     // Fetch user stats from the LeetCode API
     const response = await axios.get(
-      `https://leetcode-api-faisalshohag.vercel.app/${user.leetcodeProfileId}`
+      `https://leetcode-api-faisalshohag.vercel.app/${user.leetcodeProfileId}?timestamp=${Date.now()}`
     );
 
     if (!response.data || !response.data.recentSubmissions || !response.data.submissionCalendar) {
@@ -1124,13 +1235,52 @@ app.get("/get-progress/:userId", async (req, res) => {
     console.log(submissionCalendar);
 
     // Fetch all Striver DSA problems from MongoDB
-    const striverDSAProblems = await Problem.find();
+    const striverDSAProblems = await Problem.find({});
 
     // Track solved count
     let solvedCount = 0;
 
+    // For difficulty-based progress tracking
+    const difficultyCount = {
+      easy: { total: 0, solved: 0 },
+      medium: { total: 0, solved: 0 },
+      hard: { total: 0, solved: 0 },
+      other: { total: 0, solved: 0 }
+    };
+
+    // Count total problems by difficulty
+    striverDSAProblems.forEach(problem => {
+      const difficulty = problem.difficulty.toLowerCase();
+      if (difficulty === 'easy') {
+        difficultyCount.easy.total++;
+      } else if (difficulty === 'medium') {
+        difficultyCount.medium.total++;
+      } else if (difficulty === 'hard') {
+        difficultyCount.hard.total++;
+      } else {
+        difficultyCount.other.total++;
+      }
+    });
+
     // Iterate over Striver's DSA problems
     for (const problem of striverDSAProblems) {
+      const isSolved = user.solvedProblems.includes(problem.title);
+      
+      // Count solved problems by difficulty
+      if (isSolved) {
+        solvedCount++;
+        const difficulty = problem.difficulty.toLowerCase();
+        if (difficulty === 'easy') {
+          difficultyCount.easy.solved++;
+        } else if (difficulty === 'medium') {
+          difficultyCount.medium.solved++;
+        } else if (difficulty === 'hard') {
+          difficultyCount.hard.solved++;
+        } else {
+          difficultyCount.other.solved++;
+        }
+      }
+
       // Check if the problem is in the user's recent submissions and is "Accepted"
       if (
         response.data.recentSubmissions.some(
@@ -1138,25 +1288,46 @@ app.get("/get-progress/:userId", async (req, res) => {
             submission.titleSlug ===
               problem.title.toLowerCase().replace(/ /g, "-") &&
             submission.statusDisplay === "Accepted"
-        )
+        ) && !user.solvedProblems.includes(problem.title)
       ) {
-        solvedCount++;
-
-        // Add the problem to the user's solvedProblems array in the User collection
-        if (!user.solvedProblems.includes(problem.title)) {
-          user.solvedProblems.push(problem.title);
-        }
+        // Only add if it's not already in the solved list
+        user.solvedProblems.push(problem.title);
       }
     }
 
     // Calculate progress percentage for Striver DSA problems
-    const progress = (solvedCount / striverDSAProblems.length) * 100;
+    const progress = (user.solvedProblems.length / striverDSAProblems.length) * 100;
 
     // Update the user's solved questions count and other stats
     user.solvedQuestions = totalSolved;
     user.submissionCalendar = submissionCalendar;
     user.leetcodeLastUpdated = new Date();
     await user.save();
+
+    // Calculate percentages for each difficulty
+    const difficultyProgress = {
+      easy: {
+        solved: difficultyCount.easy.solved,
+        total: difficultyCount.easy.total,
+        percentage: difficultyCount.easy.total > 0 
+          ? (difficultyCount.easy.solved / difficultyCount.easy.total * 100).toFixed(2) 
+          : 0
+      },
+      medium: {
+        solved: difficultyCount.medium.solved,
+        total: difficultyCount.medium.total,
+        percentage: difficultyCount.medium.total > 0 
+          ? (difficultyCount.medium.solved / difficultyCount.medium.total * 100).toFixed(2) 
+          : 0
+      },
+      hard: {
+        solved: difficultyCount.hard.solved,
+        total: difficultyCount.hard.total,
+        percentage: difficultyCount.hard.total > 0 
+          ? (difficultyCount.hard.solved / difficultyCount.hard.total * 100).toFixed(2) 
+          : 0
+      }
+    };
 
     // Send updated progress data to the frontend
     res.json({
@@ -1167,9 +1338,10 @@ app.get("/get-progress/:userId", async (req, res) => {
       reputation,
       submissionCalendar,
       striverDSAProgress: {
-        solvedCount,
+        solvedCount2: user.solvedProblems.length,
         totalCount: striverDSAProblems.length,
         progressPercentage: progress.toFixed(2), // Rounded to 2 decimal places
+        difficultyProgress: difficultyProgress // Include the difficulty breakdown
       },
       easySolved,
       totalEasy,
@@ -1271,7 +1443,7 @@ app.get("/api/dsa-problems", async (req, res) => {
 
     const solvedProblems = new Set(user.solvedProblems); // Use a Set to efficiently check if a problem is solved
     console.log(solvedProblems)
-    // Mark each problem as solved or not based on the user’s solved problems
+    // Mark each problem as solved or not based on the user's solved problems
     const problemsWithStatus = problems.map(problem => ({
       ...problem.toObject(),
       solved: solvedProblems.has(problem.title) // Check if the problem is in the solved list
@@ -1410,28 +1582,51 @@ app.post('/create-profile', upload.single('profilePic'), async (req, res) => {
   try {
     const profilePicUrl = `${baseUrl}/uploads/${req.file.filename}`;
     
-    // Create new user with all the information
-    const newUser = new User({
-      uid,
-      username,
-      email,
-      preferredLanguage,
-      preferredSolvingTime,
-      profilePic: profilePicUrl,
-      leetcodeProfileId,
-      // New fields from the updated form
-      dsaSheet: dsaSheet || "",
-      dailyProblems: dailyProblems || "",
-      codingGoal: codingGoal || "",
-      codingLevel: codingLevel || "",
-      codingSpeed: codingSpeed || "",
-      solvePreference: solvePreference || "",
-      partnerPreference: partnerPreference || "",
-      bio: bio || ""
-    });
+    // Check if user already exists
+    const existingUser = await User.findOne({ uid });
     
-    await newUser.save();
-    res.status(200).json({ message: 'Profile created successfully', user: newUser });
+    if (existingUser) {
+      // Update existing user with profile information
+      existingUser.username = username;
+      existingUser.email = email;
+      existingUser.preferredLanguage = preferredLanguage;
+      existingUser.preferredSolvingTime = preferredSolvingTime;
+      existingUser.profilePic = profilePicUrl;
+      existingUser.leetcodeProfileId = leetcodeProfileId;
+      existingUser.dsaSheet = dsaSheet || "";
+      existingUser.dailyProblems = dailyProblems || "";
+      existingUser.codingGoal = codingGoal || "";
+      existingUser.codingLevel = codingLevel || "";
+      existingUser.codingSpeed = codingSpeed || "";
+      existingUser.solvePreference = solvePreference || "";
+      existingUser.partnerPreference = partnerPreference || "";
+      existingUser.bio = bio || "";
+      
+      await existingUser.save();
+      return res.status(200).json({ message: 'Profile updated successfully', user: existingUser });
+    } else {
+      // Create new user if doesn't exist (this will handle Google Auth case)
+      const newUser = new User({
+        uid,
+        username,
+        email,
+        preferredLanguage,
+        preferredSolvingTime,
+        profilePic: profilePicUrl,
+        leetcodeProfileId,
+        dsaSheet: dsaSheet || "",
+        dailyProblems: dailyProblems || "",
+        codingGoal: codingGoal || "",
+        codingLevel: codingLevel || "",
+        codingSpeed: codingSpeed || "",
+        solvePreference: solvePreference || "",
+        partnerPreference: partnerPreference || "",
+        bio: bio || ""
+      });
+      
+      await newUser.save();
+      return res.status(200).json({ message: 'Profile created successfully', user: newUser });
+    }
   } catch (err) {
     console.error('Error creating profile:', err);
     res.status(500).json({ message: 'Error creating profile', error: err.message });
@@ -1578,7 +1773,55 @@ app.get('/user/:uid', async (req, res) => {
   }
 });
 
-
+// Add this route to get the last message timestamp for each chat partner
+app.get('/api/messages/last-timestamps', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+    
+    // Find the latest message for each conversation
+    const latestMessages = await Message.aggregate([
+      // Match messages where the current user is either sender or receiver
+      { 
+        $match: { 
+          $or: [
+            { senderUID: userId },
+            { receiverUID: userId }
+          ]
+        }
+      },
+      // Sort by timestamp descending (newest first)
+      { $sort: { timestamp: -1 } },
+      // Group by the other user in the conversation
+      {
+        $group: {
+          _id: {
+            $cond: [
+              { $eq: ["$senderUID", userId] },
+              "$receiverUID", // If user is sender, group by receiver
+              "$senderUID"    // If user is receiver, group by sender
+            ]
+          },
+          latestTimestamp: { $first: "$timestamp" } // Get the first (newest) timestamp
+        }
+      }
+    ]);
+    
+    // Convert to a more convenient format for the frontend
+    const timestampMap = {};
+    latestMessages.forEach(msg => {
+      timestampMap[msg._id] = msg.latestTimestamp;
+    });
+    
+    res.status(200).json(timestampMap);
+  } catch (error) {
+    console.error('Error fetching last message timestamps:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Start the server
 const PORT = process.env.PORT || 5000;
